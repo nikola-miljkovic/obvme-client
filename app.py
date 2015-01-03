@@ -73,9 +73,7 @@ pictureHashes = {}
 
 def get_picture(url):
     rule = 'img src=\"(.*)\" width='
-    print 'parsing ' + url
     data = requests.get(url).content
-    print 'requesting' + url
     match = re.search(rule, data)
     return match.group(1)
 
@@ -97,6 +95,7 @@ def get_pictures_from_xml(url):
         for item in parsed[0].findall('item'):
             link = item.find('link').text
             pictureHashes[link] = get_picture(link)
+            print pictureHashes[link]
 
         hashDict[url] = ts
 
