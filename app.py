@@ -77,10 +77,7 @@ def get_picture(url):
     match = re.search(rule, data)
     return match.group(1)
 
-
-@app.route('/get-pics/<path:url>')
-@crossdomain(origin='*')
-def get_pictures_from_xml(url):
+def get_from_url(url):
     if url not in hashDict:
         print 'Bad request: ' + url
         return 'bad request'
@@ -100,6 +97,11 @@ def get_pictures_from_xml(url):
         hashDict[url] = ts
 
     return json.dumps(pictureHashes)
+
+@app.route('/get-pics/<path:url>')
+@crossdomain(origin='*')
+def get_pictures_from_xml(url):
+    return get_from_url(url)
 
 for url in hashDict:
     get_pictures_from_xml(url)
