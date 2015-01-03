@@ -72,6 +72,8 @@ hashDict = {
 
 
 pictureHashes = {}
+for url in hashDict:
+    pictureHashes[url] = {}
 
 
 def get_picture(url):
@@ -93,13 +95,17 @@ def update_hashes(url):
     ts = parsedate_tz(parsed[0].find('lastBuildDate').text)
 
     if ts > hashDict[url]:
+        count = 0
         for item in parsed[0].findall('item'):
+            count += 1
+            if count == 30:
+                break
             link = item.find('link').text
             if link in pictureHashes:
                 break
 
-            pictureHashes[link] = get_picture(link)
-            print pictureHashes[link]
+            pictureHashes[url][link] = get_picture(link)
+            print pictureHashes[url][link]
 
         hashDict[url] = ts
 
@@ -111,7 +117,7 @@ for url in hashDict:
 @crossdomain(origin='*')
 def get_pictures_from_xml(url):
     update_hashes(url)
-    return json.dumps(pictureHashes)
+    return json.dumps(pictureHashes[url])
 
 
 @app.route('/parse-pics/<path:url>')
