@@ -73,7 +73,9 @@ pictureHashes = {}
 
 def get_picture(url):
     rule = 'img src=\"(.*)\" width='
+    print 'parsing ' + url
     data = requests.get(url).content
+    print 'requesting' + url
     match = re.search(rule, data)
     return match.group(1)
 
