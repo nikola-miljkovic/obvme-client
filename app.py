@@ -51,7 +51,9 @@ def crossdomain(origin=None, methods=None, headers=None,
         return update_wrapper(wrapped_function, f)
     return decorator
 
+
 app = Flask(__name__)
+
 
 hashDict = {
     'http://www.b92.net/info/rss/vesti.xml': 1,
@@ -68,6 +70,7 @@ hashDict = {
     'http://www.b92.net/info/rss/video.xml': 1
 }
 
+
 pictureHashes = {}
 
 
@@ -77,7 +80,8 @@ def get_picture(url):
     match = re.search(rule, data)
     return match.group(1)
 
-def get_from_url(url):
+
+def update_hashes(url):
     if url not in hashDict:
         print 'Bad request: ' + url
         return 'bad request'
@@ -96,17 +100,17 @@ def get_from_url(url):
 
         hashDict[url] = ts
 
-    return json.dumps(pictureHashes)
+
+for url in hashDict:
+    update_hashes(url)
 
 @app.route('/get-pics/<path:url>')
 @crossdomain(origin='*')
 def get_pictures_from_xml(url):
-    return get_from_url(url)
+    update_hashes(url)
+    return json.dumps(pictureHashes)
 
-for url in hashDict:
-    get_from_url(url)
 
 @app.route('/parse-pics/<path:url>')
 def get_pictures_from_feed(url):
-
     return url
