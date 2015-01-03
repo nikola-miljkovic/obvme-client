@@ -57,7 +57,9 @@ app = Flask(__name__)
 
 
 hashDict = {
+    'http://www.b92.net/info/rss/index.xml': 1,
     'http://www.b92.net/info/rss/vesti.xml': 1,
+    'http://www.b92.net/info/rss/automobili.xml': 1,
     'http://www.b92.net/info/rss/sport.xml': 1,
     'http://www.b92.net/info/rss/zivot.xml': 1,
     'http://www.b92.net/info/rss/tehnopolis.xml': 1,
