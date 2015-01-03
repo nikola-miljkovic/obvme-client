@@ -115,7 +115,7 @@ for url in hashDict:
 @crossdomain(origin='*')
 def get_pictures_from_xml(url):
     update_hashes(url)
-    return json.dumps(pictureHashes[url]) if pictureHashes[url] else '{}'
+    return json.dumps(pictureHashes[url]) if url in pictureHashes else '{}'
 
 
 @app.route('/parse-pics/<path:url>')
