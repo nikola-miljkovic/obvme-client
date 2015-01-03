@@ -104,7 +104,7 @@ def get_pictures_from_xml(url):
     return get_from_url(url)
 
 for url in hashDict:
-    get_pictures_from_xml(url)
+    get_from_url(url)
 
 @app.route('/parse-pics/<path:url>')
 def get_pictures_from_feed(url):
