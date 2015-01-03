@@ -9,11 +9,6 @@ from datetime import timedelta
 from flask import make_response, request, current_app
 from functools import update_wrapper
 
-import gevent.wsgi
-import gevent.monkey
-import werkzeug.serving
-
-gevent.monkey.patch_all()
 
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
@@ -110,12 +105,3 @@ def get_pictures_from_xml(url):
 def get_pictures_from_feed(url):
 
     return url
-
-@werkzeug.serving.run_with_reloader
-def run_server():
-    ws = gevent.wsgi.WSGIServer(listener=('0.0.0.0', 8000),
-                                application=app)
-    ws.serve_forever()
-
-if __name__ == "__main__":
-    run_server()
