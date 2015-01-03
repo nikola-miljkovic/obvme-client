@@ -101,7 +101,7 @@ def update_hashes(url):
             if count == 30:
                 break
             link = item.find('link').text
-            if link in pictureHashes:
+            if link in pictureHashes[url]:
                 break
 
             pictureHashes[url][link] = get_picture(link)
