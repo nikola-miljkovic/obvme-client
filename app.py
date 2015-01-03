@@ -95,9 +95,9 @@ def update_hashes(url):
     if ts > hashDict[url]:
         for item in parsed[0].findall('item'):
             link = item.find('link').text
-            if pictureHashes[link]:
+            if link in pictureHashes:
                 break
-                
+
             pictureHashes[link] = get_picture(link)
             print pictureHashes[link]
 
