@@ -58,7 +58,6 @@ app = Flask(__name__)
 
 hashDict = {
     'http://www.b92.net/info/rss/vesti.xml': 1,
-    'http://www.b92.net/info/rss/automobili.xml': 1,
     'http://www.b92.net/info/rss/sport.xml': 1,
     'http://www.b92.net/info/rss/zivot.xml': 1,
     'http://www.b92.net/info/rss/tehnopolis.xml': 1,
@@ -118,7 +117,7 @@ for url in hashDict:
 @crossdomain(origin='*')
 def get_pictures_from_xml(url):
     update_hashes(url)
-    return json.dumps(pictureHashes[url])
+    return json.dumps(pictureHashes[url] if pictureHashes[url] else {})
 
 
 @app.route('/parse-pics/<path:url>')
