@@ -63,7 +63,6 @@ hashDict = {
     'http://www.b92.net/info/rss/tehnopolis.xml': 1,
     'http://blog.b92.net/rss/feed/index.xml': 1,
     'http://www.b92.net/info/rss/news.xml': 1,
-    'http://www.b92.net/info/rss/biz.xml': 1,
     'http://www.b92.net/info/rss/kultura.xml': 1,
     'http://www.b92.net/info/rss/putovanja.xml': 1,
     'http://www.b92.net/info/rss/zdravlje.xml': 1,
@@ -87,7 +86,7 @@ def get_picture(url):
 def update_hashes(url):
     if url not in hashDict:
         print 'Bad request: ' + url
-        return 'bad request'
+        return
 
     data = requests.get(url).content
     parsed = ET.fromstring(data)
@@ -105,7 +104,6 @@ def update_hashes(url):
                 break
 
             pictureHashes[url][link] = get_picture(link)
-            print pictureHashes[url][link]
 
         hashDict[url] = ts
 
@@ -117,7 +115,7 @@ for url in hashDict:
 @crossdomain(origin='*')
 def get_pictures_from_xml(url):
     update_hashes(url)
-    return json.dumps(pictureHashes[url] if pictureHashes[url] else {})
+    return json.dumps(pictureHashes[url]) if pictureHashes[url] else {}
 
 
 @app.route('/parse-pics/<path:url>')
