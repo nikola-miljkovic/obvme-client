@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 import json
 import re
 from email.utils import parsedate_tz
+from HTMLParser import HTMLParser
 
 from datetime import timedelta
 from flask import make_response, request, current_app
@@ -64,7 +65,6 @@ hashDict = {
     'http://www.b92.net/info/rss/news.xml': 1,
     'http://www.b92.net/info/rss/biz.xml': 1,
     'http://www.b92.net/info/rss/kultura.xml': 1,
-    'http://www.b92.net/info/rss/automobili.xml': 1,
     'http://www.b92.net/info/rss/putovanja.xml': 1,
     'http://www.b92.net/info/rss/zdravlje.xml': 1,
     'http://www.b92.net/info/rss/video.xml': 1
@@ -75,10 +75,11 @@ pictureHashes = {}
 
 
 def get_picture(url):
-    rule = 'img src=\"(.*)\" width='
+    #rule = 'img src=\"(.*^")\s?width="640'
+    rule = "img\s*src=\"(.*)\"\s?width=\"640\""
     data = requests.get(url).content
     match = re.search(rule, data)
-    return match.group(1)
+    return match.group(1) if match else ''
 
 
 def update_hashes(url):
@@ -88,11 +89,10 @@ def update_hashes(url):
 
     data = requests.get(url).content
     parsed = ET.fromstring(data)
-
-    ts = parsedate_tz(parsed[0].find('pubDate').text)
+    print 'parsing ' + url
+    ts = parsedate_tz(parsed[0].find('lastBuildDate').text)
 
     if ts > hashDict[url]:
-        print 'parsing ' + url
         for item in parsed[0].findall('item'):
             link = item.find('link').text
             pictureHashes[link] = get_picture(link)
