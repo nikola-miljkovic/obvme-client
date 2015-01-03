@@ -9,6 +9,8 @@ from datetime import timedelta
 from flask import make_response, request, current_app
 from functools import update_wrapper
 
+import cherrypy
+from paste.translogger import TransLogger
 
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
@@ -106,6 +108,24 @@ def get_pictures_from_feed(url):
 
     return url
 
-if __name__ == '__main__':
+def run_server():
+    # Enable WSGI access logging via Paste
+    app_logged = TransLogger(app)
 
-    app.run(host='0.0.0.0', port=3000)
+    # Mount the WSGI callable object (app) on the root directory
+    cherrypy.tree.graft(app_logged, '/')
+
+    # Set the configuration of the web server
+    cherrypy.config.update({
+        'engine.autoreload_on': True,
+        'log.screen': True,
+        'server.socket_port': 5000,
+        'server.socket_host': '0.0.0.0'
+    })
+
+    # Start the CherryPy WSGI web server
+    cherrypy.engine.start()
+    cherrypy.engine.block()
+
+if __name__ == "__main__":
+    run_server()
