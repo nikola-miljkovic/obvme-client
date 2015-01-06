@@ -4,9 +4,7 @@ import xml.etree.ElementTree as ET
 import json
 import re
 from email.utils import parsedate_tz
-from HTMLParser import HTMLParser
 
-from bs4 import BeautifulSoup
 
 from datetime import timedelta
 from flask import make_response, request, current_app
@@ -58,7 +56,6 @@ def crossdomain(origin=None, methods=None, headers=None,
 app = Flask(__name__)
 
 
-
 hashDict = {
     'http://www.b92.net/info/rss/vesti.xml': 1,
     'http://www.b92.net/info/rss/sport.xml': 1,
@@ -69,13 +66,13 @@ hashDict = {
     'http://www.b92.net/info/rss/kultura.xml': 1,
     'http://www.b92.net/info/rss/putovanja.xml': 1,
     'http://www.b92.net/info/rss/zdravlje.xml': 1,
-    #'http://www.b92.net/info/rss/video.xml': 1,
-    'http://www.b92.net/info/rss/automobili.xml': 1
+    'http://www.b92.net/info/rss/video.xml': 1
 }
 
-requestLimit = 30
 
 pictureHashes = {}
+for url in hashDict:
+    pictureHashes[url] = {}
 
 
 def get_picture(url):
@@ -91,7 +88,7 @@ def get_picture(url):
 def update_hashes(url):
     if url not in hashDict:
         print 'Bad request: ' + url
-        return 'bad request'
+        return
 
     data = requests.get(url).content
     parsed = ET.fromstring(data)
@@ -102,16 +99,13 @@ def update_hashes(url):
         count = 0
         for item in parsed[0].findall('item'):
             count += 1
-
             if count == 30:
                 break
-
             link = item.find('link').text
             if link in pictureHashes[url]:
                 break
-            link = item.find('link').text
-            pictureHashes[link] = get_picture(link)
-            print pictureHashes[link]
+
+            pictureHashes[url][link] = get_picture(link)
 
         hashDict[url] = ts
 
@@ -119,16 +113,18 @@ def update_hashes(url):
 for url in hashDict:
     update_hashes(url)
 
-print 'Hashing finished'
-
 @app.route('/get-pics/<path:url>')
 @crossdomain(origin='*')
 def get_pictures_from_xml(url):
     update_hashes(url)
-    return json.dumps(pictureHashes)
+    print pictureHashes[url]
+    return json.dumps(pictureHashes[url]) if url in pictureHashes else '{}'
 
 
 @app.route('/parse-pics/<path:url>')
-@crossdomain(origin='*')
 def get_pictures_from_feed(url):
     return url
+
+if __name__ == '__main__':
+
+    app.run()
