@@ -98,7 +98,7 @@ for url in hashDict:
     pictureHashes[url] = {}
 
 reqCount = 0
-loaded = false
+loaded = False
 
 def get_picture(url):
     soup = BeautifulSoup(requests.get(url).content)
@@ -169,7 +169,7 @@ def update_hashes(url):
 for url in hashDict:
     update_hashes(url)
 
-loaded = true
+loaded = True
 print 'Parsovanje je gotovo'
 
 
