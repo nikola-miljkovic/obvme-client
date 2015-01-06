@@ -93,11 +93,11 @@ hashDict = {
     'http://www.rts.rs/page/sport/sr/rss/129/ostali+sportovi.html': 1
 }
 
+req_c = 1
 pictureHashes = {}
 for url in hashDict:
     pictureHashes[url] = {}
 
-reqCount = 0
 loaded = False
 
 def get_picture(url):
@@ -128,11 +128,13 @@ def update_hashes(url):
         print 'Bad request: ' + url
         return
 
-    if reqCount != 0 and loaded:
-        reqCount = 0 if reqCount == 25 else reqCount + 1
-        return
-    else:
-        reqCount = 1
+    if loaded:
+        if req_c != 0:
+            req_c = 0 if req_c == 25 else req_c + 1
+            return
+        else:
+            req_c = 1
+
 
     data = requests.get(url).content
     parsed = ET.fromstring(data)
@@ -165,7 +167,7 @@ def update_hashes(url):
 
         hashDict[url] = ts
 
-
+req_c = 1
 for url in hashDict:
     update_hashes(url)
 
