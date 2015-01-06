@@ -64,6 +64,7 @@ hashDict = {
     'http://www.b92.net/info/rss/zivot.xml': 1,
     'http://www.b92.net/info/rss/tehnopolis.xml': 1,
     'http://blog.b92.net/rss/feed/index.xml': 1,
+    'http://www.b92.net/info/rss/automobili.xml': 1,
     'http://www.b92.net/info/rss/news.xml': 1,
     'http://www.b92.net/info/rss/kultura.xml': 1,
     'http://www.b92.net/info/rss/putovanja.xml': 1,
