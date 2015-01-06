@@ -97,6 +97,8 @@ pictureHashes = {}
 for url in hashDict:
     pictureHashes[url] = {}
 
+reqCount = 0
+loaded = false
 
 def get_picture(url):
     soup = BeautifulSoup(requests.get(url).content)
@@ -125,6 +127,12 @@ def update_hashes(url):
     if url not in hashDict:
         print 'Bad request: ' + url
         return
+
+    if reqCount != 0 and loaded:
+        reqCount = 0 if reqCount == 25 else reqCount + 1
+        return
+    else:
+        reqCount = 1
 
     data = requests.get(url).content
     parsed = ET.fromstring(data)
@@ -161,7 +169,9 @@ def update_hashes(url):
 for url in hashDict:
     update_hashes(url)
 
+loaded = true
 print 'Parsovanje je gotovo'
+
 
 @app.route('/get-pics/<path:url>')
 @crossdomain(origin='*')
