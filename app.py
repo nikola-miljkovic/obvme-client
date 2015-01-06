@@ -58,7 +58,7 @@ app = Flask(__name__)
 
 
 hashDict = {
-    'http://www.b92.net/info/rss/vesti.xml': 1,
+    'http://www.b92.net/info/rss/vesti.xml': 1, # 0
     'http://www.b92.net/info/rss/sport.xml': 1,
     'http://www.b92.net/info/rss/zivot.xml': 1,
     'http://www.b92.net/info/rss/tehnopolis.xml': 1,
@@ -67,10 +67,33 @@ hashDict = {
     'http://www.b92.net/info/rss/kultura.xml': 1,
     'http://www.b92.net/info/rss/putovanja.xml': 1,
     'http://www.b92.net/info/rss/zdravlje.xml': 1,
-    'http://www.b92.net/info/rss/video.xml': 1
+    'http://www.b92.net/info/rss/video.xml': 1,
+    'http://www.rts.rs/page/stories/sr/rss.html': 1, #10
+    'http://www.rts.rs/page/stories/sr/rss/9/politika.html': 1,
+    'http://www.rts.rs/page/stories/sr/rss/11/region.html': 1,
+    'http://www.rts.rs/page/stories/sr/rss/10/svet.html': 1,
+    'http://www.rts.rs/page/stories/sr/rss/57/srbija danas.html': 1,
+    'http://www.rts.rs/page/stories/sr/rss/135/hronika.html': 1,
+    'http://www.rts.rs/page/stories/sr/rss/125/društvo.html': 1,
+    'http://www.rts.rs/page/stories/sr/rss/13/ekonomija.html': 1,
+    'http://www.rts.rs/page/stories/sr/rss/16/kultura.html': 1,
+    'http://www.rts.rs/page/stories/sr/rss/691/vreme.html': 1,
+    'http://www.rts.rs/page/stories/sr/rss/711/merila vremena.html': 1,
+    'http://www.rts.rs/page/stories/sr/rss/245/servisne vesti.html': 1,
+    'http://www.rts.rs/page/stories/sr/rss/1131/vide+dana.html': 1,
+    'http://www.rts.rs/page/sport/sr/rss.html': 1,
+    'http://www.rts.rs/page/sport/sr/rss/36/fudbal.html': 1,
+    'http://www.rts.rs/page/sport/sr/rss/37/košarka.html': 1,
+    'http://www.rts.rs/page/sport/sr/rss/38/tenis.html': 1,
+    'http://www.rts.rs/page/sport/sr/rss/39/odbojka.html': 1,
+    'http://www.rts.rs/page/sport/sr/rss/131/rukomet.html': 1,
+    'http://www.rts.rs/page/sport/sr/rss/40/vaterpolo.html': 1,
+    'http://www.rts.rs/page/sport/sr/rss/87/atletika.html': 1,
+    'http://www.rts.rs/page/sport/sr/rss/133/auto-moto.html': 1,
+    'http://www.rts.rs/page/sport/sr/rss/129/ostali+sportovi.html': 1
 }
 
-
+hashingNum = -1
 pictureHashes = {}
 
 for url in hashDict:
@@ -79,12 +102,25 @@ for url in hashDict:
 
 def get_picture(url):
     soup = BeautifulSoup(requests.get(url).content)
-    div = soup.find('div', {'class': 'article-text'})
-    if not div:
-        div = soup.find('div', {'class': 'blog-text'})
 
-    img = div.find('img')
-    return img['src'] if img else ''
+    if hashingNum >= 0 and hashingNum < 10:
+        div = soup.find('div', {'class': 'article-text'})
+        if not div:
+            div = soup.find('div', {'class': 'blog-text'})
+    elif hashingNum >= 10:
+        div = soup.find('div', {'class': ['box-left', 'box-image']})
+    else:
+        div = soup.find('div', {'class': 'article-text'})
+        if not div:
+            div = soup.find('div', {'class': ['box-left', 'box-image']})
+        else:
+            div = soup.find('div', {'class': 'blog-text'})
+
+    if not div:
+        return ''
+    else:
+        img = div.find('img')
+        return img['src'] if img else ''
 
 
 def update_hashes(url):
@@ -121,7 +157,6 @@ print 'Parsovanje je gotovo'
 @crossdomain(origin='*')
 def get_pictures_from_xml(url):
     update_hashes(url)
-    print pictureHashes[url]
     return json.dumps(pictureHashes[url]) if url in pictureHashes else '{}'
 
 
