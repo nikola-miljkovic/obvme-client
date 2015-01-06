@@ -5,6 +5,7 @@ import json
 import re
 from email.utils import parsedate_tz
 
+from bs4 import BeautifulSoup
 
 from datetime import timedelta
 from flask import make_response, request, current_app
@@ -71,6 +72,7 @@ hashDict = {
 
 
 pictureHashes = {}
+
 for url in hashDict:
     pictureHashes[url] = {}
 
@@ -124,7 +126,3 @@ def get_pictures_from_xml(url):
 @app.route('/parse-pics/<path:url>')
 def get_pictures_from_feed(url):
     return url
-
-if __name__ == '__main__':
-
-    app.run()
