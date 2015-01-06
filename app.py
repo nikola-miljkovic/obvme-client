@@ -93,9 +93,7 @@ hashDict = {
     'http://www.rts.rs/page/sport/sr/rss/129/ostali+sportovi.html': 1
 }
 
-hashingNum = -1
 pictureHashes = {}
-
 for url in hashDict:
     pictureHashes[url] = {}
 
@@ -103,24 +101,24 @@ for url in hashDict:
 def get_picture(url):
     soup = BeautifulSoup(requests.get(url).content)
 
-    if hashingNum == -1:
+    if url[11:12] == 'b':
         div = soup.find('div', {'class': 'article-text'})
-        if not div:
-            div = soup.find('div', {'class': ['box-left', 'box-image']})
-        else:
-            div = soup.find('div', {'class': 'blog-text'})
-    elif hashingNum >= 0 and hashingNum < 10:
-        div = soup.find('div', {'class': 'article-text'})
-        if not div:
-            div = soup.find('div', {'class': 'blog-text'})
-    else: #hashingNum >= 10:
-        div = soup.find('div', {'class': ['box-left', 'box-image']})
-
-    if not div:
-        return ''
+    elif url[7:8] == 'b':
+        div = soup.find('div', {'class': 'blog-text'})
     else:
+        div = None
+
+    if div is not None:
         img = div.find('img')
         return img['src'] if img else ''
+    else:
+        return None
+
+
+def parse_description(desc):
+    r = 'img\ssrc="(.*)"'
+    z = re.search(r, desc)
+    return z.group(1)
 
 
 def update_hashes(url):
@@ -130,37 +128,39 @@ def update_hashes(url):
 
     data = requests.get(url).content
     parsed = ET.fromstring(data)
-    print 'parsing ' + url
 
     if parsed[0].find('lastBuildDate') is not None:
-        v = parsed[0].find('lastBuildDate')
-    else: #prvi
+            v = parsed[0].find('lastBuildDate')
+    else:
         v = parsed[0].find('item')
         v = v.find('pubDate')
 
-    print v.text
-    ts = parsedate_tz(v)
+    ts = parsedate_tz(v.text)
 
     if ts > hashDict[url]:
         count = 0
+        print 'parsing ' + url
         for item in parsed[0].findall('item'):
             count += 1
             if count == 30:
                 break
             link = item.find('link').text
             if link in pictureHashes[url]:
-                break
+                 break
 
-            pictureHashes[url][link] = get_picture(link)
+            if url[11:12] == 'r':
+                pictureHashes[url][link] = parse_description(item.find('description').text)
+            else:
+                pictureHashes[url][link] = get_picture(link)
+
+            print pictureHashes[url][link]
 
         hashDict[url] = ts
 
 
 for url in hashDict:
-    hashingNum += 1
     update_hashes(url)
 
-hashingNum = 0
 print 'Parsovanje je gotovo'
 
 @app.route('/get-pics/<path:url>')
