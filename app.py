@@ -102,6 +102,10 @@ def update_hashes(url):
         count = 0
         for item in parsed[0].findall('item'):
             count += 1
+
+            if count == 30:
+                break
+                
             link = item.find('link').text
             pictureHashes[link] = get_picture(link)
             print pictureHashes[link]
