@@ -115,6 +115,8 @@ def update_hashes(url):
 for url in hashDict:
     update_hashes(url)
 
+print 'Parsovanje je gotovo'
+
 @app.route('/get-pics/<path:url>')
 @crossdomain(origin='*')
 def get_pictures_from_xml(url):
