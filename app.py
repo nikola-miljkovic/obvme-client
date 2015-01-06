@@ -55,7 +55,8 @@ def crossdomain(origin=None, methods=None, headers=None,
 
 
 app = Flask(__name__)
-
+global req_c
+req_c = 0
 
 hashDict = {
     'http://www.b92.net/info/rss/vesti.xml': 1, # 0
@@ -100,8 +101,13 @@ for url in hashDict:
 
 loaded = False
 
+
 def get_picture(url):
-    soup = BeautifulSoup(requests.get(url).content)
+    req = requests.get(url)
+    if req is None:
+        return None
+
+    soup = BeautifulSoup(req.content)
 
     if url[11:12] == 'b':
         div = soup.find('div', {'class': 'article-text'})
@@ -120,7 +126,7 @@ def get_picture(url):
 def parse_description(desc):
     r = 'img\ssrc="(.*)"'
     z = re.search(r, desc)
-    return z.group(1)
+    return z.group(1) if z.group(1) else ''
 
 
 def update_hashes(url):
@@ -128,6 +134,7 @@ def update_hashes(url):
         print 'Bad request: ' + url
         return
 
+    global req_c
     if loaded:
         if req_c != 0:
             req_c = 0 if req_c == 25 else req_c + 1
@@ -167,7 +174,7 @@ def update_hashes(url):
 
         hashDict[url] = ts
 
-req_c = 1
+
 for url in hashDict:
     update_hashes(url)
 
@@ -185,3 +192,7 @@ def get_pictures_from_xml(url):
 @app.route('/parse-pics/<path:url>')
 def get_pictures_from_feed(url):
     return url
+
+if __name__ == '__main__':
+
+    app.run()
