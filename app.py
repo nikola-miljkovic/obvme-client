@@ -74,7 +74,7 @@ hashDict = {
     'http://www.rts.rs/page/stories/sr/rss/10/svet.html': 1,
     'http://www.rts.rs/page/stories/sr/rss/57/srbija danas.html': 1,
     'http://www.rts.rs/page/stories/sr/rss/135/hronika.html': 1,
-    'http://www.rts.rs/page/stories/sr/rss/125/društvo.html': 1,
+    'http://www.rts.rs/page/stories/sr/rss/125/Dru%C5%A1tvo': 1,
     'http://www.rts.rs/page/stories/sr/rss/13/ekonomija.html': 1,
     'http://www.rts.rs/page/stories/sr/rss/16/kultura.html': 1,
     'http://www.rts.rs/page/stories/sr/rss/691/vreme.html': 1,
@@ -83,7 +83,7 @@ hashDict = {
     'http://www.rts.rs/page/stories/sr/rss/1131/vide+dana.html': 1,
     'http://www.rts.rs/page/sport/sr/rss.html': 1,
     'http://www.rts.rs/page/sport/sr/rss/36/fudbal.html': 1,
-    'http://www.rts.rs/page/sport/sr/rss/37/košarka.html': 1,
+    'http://www.rts.rs/page/sport/sr/rss/37/ko%C5%A1arka.html': 1,
     'http://www.rts.rs/page/sport/sr/rss/38/tenis.html': 1,
     'http://www.rts.rs/page/sport/sr/rss/39/odbojka.html': 1,
     'http://www.rts.rs/page/sport/sr/rss/131/rukomet.html': 1,
@@ -103,18 +103,18 @@ for url in hashDict:
 def get_picture(url):
     soup = BeautifulSoup(requests.get(url).content)
 
-    if hashingNum >= 0 and hashingNum < 10:
-        div = soup.find('div', {'class': 'article-text'})
-        if not div:
-            div = soup.find('div', {'class': 'blog-text'})
-    elif hashingNum >= 10:
-        div = soup.find('div', {'class': ['box-left', 'box-image']})
-    else:
+    if hashingNum == -1:
         div = soup.find('div', {'class': 'article-text'})
         if not div:
             div = soup.find('div', {'class': ['box-left', 'box-image']})
         else:
             div = soup.find('div', {'class': 'blog-text'})
+    elif hashingNum >= 0 and hashingNum < 10:
+        div = soup.find('div', {'class': 'article-text'})
+        if not div:
+            div = soup.find('div', {'class': 'blog-text'})
+    else: #hashingNum >= 10:
+        div = soup.find('div', {'class': ['box-left', 'box-image']})
 
     if not div:
         return ''
@@ -131,7 +131,15 @@ def update_hashes(url):
     data = requests.get(url).content
     parsed = ET.fromstring(data)
     print 'parsing ' + url
-    ts = parsedate_tz(parsed[0].find('lastBuildDate').text)
+
+    if parsed[0].find('lastBuildDate') is not None:
+        v = parsed[0].find('lastBuildDate')
+    else: #prvi
+        v = parsed[0].find('item')
+        v = v.find('pubDate')
+
+    print v.text
+    ts = parsedate_tz(v)
 
     if ts > hashDict[url]:
         count = 0
@@ -149,8 +157,10 @@ def update_hashes(url):
 
 
 for url in hashDict:
+    hashingNum += 1
     update_hashes(url)
 
+hashingNum = 0
 print 'Parsovanje je gotovo'
 
 @app.route('/get-pics/<path:url>')
