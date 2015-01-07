@@ -216,3 +216,7 @@ def get_pictures_from_xml(url):
 @app.route('/parse-pics/<path:url>')
 def get_pictures_from_feed(url):
     return url
+
+if __name__ == '__main__':
+
+    app.run()
