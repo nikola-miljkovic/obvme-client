@@ -58,19 +58,18 @@ app = Flask(__name__)
 global req_c
 req_c = 0
 
+
 hashDict = {
     'http://www.b92.net/info/rss/vesti.xml': 1, # 0
     'http://www.b92.net/info/rss/sport.xml': 1,
     'http://www.b92.net/info/rss/zivot.xml': 1,
     'http://www.b92.net/info/rss/tehnopolis.xml': 1,
-    'http://blog.b92.net/rss/feed/index.xml': 1,
     'http://www.b92.net/info/rss/automobili.xml': 1,
     'http://www.b92.net/info/rss/biz.xml': 1,
     'http://www.b92.net/info/rss/news.xml': 1,
     'http://www.b92.net/info/rss/kultura.xml': 1,
     'http://www.b92.net/info/rss/putovanja.xml': 1,
     'http://www.b92.net/info/rss/zdravlje.xml': 1,
-    'http://www.b92.net/info/rss/video.xml': 1,
     'http://www.rts.rs/page/stories/sr/rss.html': 1, #10
     'http://www.rts.rs/page/stories/sr/rss/9/politika.html': 1,
     'http://www.rts.rs/page/stories/sr/rss/11/region.html': 1,
@@ -83,7 +82,6 @@ hashDict = {
     'http://www.rts.rs/page/stories/sr/rss/691/vreme.html': 1,
     'http://www.rts.rs/page/stories/sr/rss/711/merila vremena.html': 1,
     'http://www.rts.rs/page/stories/sr/rss/245/servisne vesti.html': 1,
-    'http://www.rts.rs/page/stories/sr/rss/1131/vide+dana.html': 1,
     'http://www.rts.rs/page/sport/sr/rss.html': 1,
     'http://www.rts.rs/page/sport/sr/rss/36/fudbal.html': 1,
     'http://www.rts.rs/page/sport/sr/rss/37/ko%C5%A1arka.html': 1,
@@ -93,7 +91,23 @@ hashDict = {
     'http://www.rts.rs/page/sport/sr/rss/40/vaterpolo.html': 1,
     'http://www.rts.rs/page/sport/sr/rss/87/atletika.html': 1,
     'http://www.rts.rs/page/sport/sr/rss/133/auto-moto.html': 1,
-    'http://www.rts.rs/page/sport/sr/rss/129/ostali+sportovi.html': 1
+    'http://www.rts.rs/page/sport/sr/rss/129/ostali+sportovi.html': 1,
+    'http://rs.n1info.com/rss/1/N1-info': 1,
+    'http://rs.n1info.com/rss/2/N1-info': 1,
+    'http://rs.n1info.com/rss/3/N1-info': 1,
+    'http://rs.n1info.com/rss/4/N1-info': 1,
+    'http://rs.n1info.com/rss/5/N1-info': 1,
+    'http://rs.n1info.com/rss/6/N1-info': 1,
+    'http://rs.n1info.com/rss/7/N1-info': 1,
+    'http://rs.n1info.com/rss/8/N1-info': 1,
+    'http://rs.n1info.com/rss/10/N1-info': 1,
+    'http://rs.n1info.com/rss/11/N1-info': 1,
+    'http://rs.n1info.com/rss/12/N1-info': 1,
+    'http://rs.n1info.com/rss/13/N1-info': 1,
+    'http://rs.n1info.com/rss/14/N1-info': 1,
+    'http://rs.n1info.com/rss/15/N1-info': 1,
+    'http://rs.n1info.com/rss/16/N1-info': 1
+
 }
 
 req_c = 1
@@ -115,6 +129,8 @@ def get_picture(url):
         div = soup.find('div', {'class': 'article-text'})
     elif url[7:8] == 'b':
         div = soup.find('div', {'class': 'blog-text'})
+    elif url[11:12] == '1':
+        div = soup.find('article', {'class': None})
     else:
         div = None
 
@@ -194,7 +210,3 @@ def get_pictures_from_xml(url):
 @app.route('/parse-pics/<path:url>')
 def get_pictures_from_feed(url):
     return url
-
-if __name__ == '__main__':
-
-    app.run()
