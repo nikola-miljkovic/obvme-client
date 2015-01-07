@@ -111,6 +111,7 @@ hashDict = {
 }
 
 req_c = 1
+big_count = 1
 pictureHashes = {}
 for url in hashDict:
     pictureHashes[url] = {}
@@ -153,6 +154,8 @@ def update_hashes(url):
         return
 
     global req_c
+    global big_count
+
     if loaded:
         if req_c != 0:
             req_c = 0 if req_c == 25 else req_c + 1
@@ -188,8 +191,11 @@ def update_hashes(url):
             else:
                 pictureHashes[url][link] = get_picture(link)
 
-            print pictureHashes[url][link]
+            #print pictureHashes[url][link]
 
+
+        print 'Finished ' + str(big_count) + ' / ' + str(len(hashDict.keys()))
+        big_count = big_count + 1
         hashDict[url] = ts
 
 
