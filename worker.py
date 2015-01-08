@@ -156,7 +156,7 @@ def update_hashes(url):
             for i in range(0, list_length):
                 new_dict[full_l[i]] = full_p[i]
 
-        red.set('json:' + url, json.dumps(new_dict)[1:-1])
+        red.set('json:' + url, json.dumps(new_dict))
 
         hashDict[url] = ts
 
