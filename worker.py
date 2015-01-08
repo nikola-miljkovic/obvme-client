@@ -107,58 +107,59 @@ def parse_description(desc):
 def update_hashes(url):
     global big_count
     print 'cita: ' + url
-    data = requests.get(url).content
-    parsed = ET.fromstring(data)
 
-    if parsed[0].find('lastBuildDate') is not None:
-        v = parsed[0].find('lastBuildDate')
-    else:
+    try:
+        data = requests.get(url).content
+        parsed = ET.fromstring(data)
+
         v = parsed[0].find('item')
         v = v.find('pubDate')
 
-    ts = parsedate_tz(v.text)
+        ts = parsedate_tz(v.text)
 
-    if ts > hashDict[url]:
-        count = 0
-        print 'parsing ' + url
-        for item in parsed[0].findall('item'):
-            count += 1
-            if count == 30:
-                break
-            link = item.find('link').text
-            if link in pictureHashes[url]:
-                break
+        if ts > hashDict[url]:
+            count = 0
+            print 'parsing ' + url
+            for item in parsed[0].findall('item'):
+                count += 1
+                if count == 30:
+                    break
+                link = item.find('link').text
+                if link in pictureHashes[url]:
+                    break
 
-            if url[11:12] == 'r':
-                pictureHashes[url][link] = parse_description(item.find('description').text)
-            else:
-                pictureHashes[url][link] = get_picture(link)
+                if url[11:12] == 'r':
+                    pictureHashes[url][link] = parse_description(item.find('description').text)
+                else:
+                    pictureHashes[url][link] = get_picture(link)
 
-            if pictureHashes[url][link]:
-                red.lpush('link:' + url, link)
-                red.ltrim('link:' + url, 0, 29)
-                red.lpush('pic:' + url, pictureHashes[url][link])
-                red.ltrim('pic:' + url, 0, 29)
+                if pictureHashes[url][link]:
+                    red.lpush('link:' + url, link)
+                    red.ltrim('link:' + url, 0, 29)
+                    red.lpush('pic:' + url, pictureHashes[url][link])
+                    red.ltrim('pic:' + url, 0, 29)
 
-            # print pictureHashes[url][link]
+                # print pictureHashes[url][link]
 
-        print 'Finished ' + str(big_count) + ' / ' + str(len(hashDict.keys()))
-        big_count = big_count + 1
+            print 'Finished ' + str(big_count) + ' / ' + str(len(hashDict.keys()))
+            big_count = big_count + 1
 
-        # Convert to json! :)
-        list_length = red.llen('link:' + url)
-        new_dict = {}
-        print list_length
-        if list_length > 0:
-            full_l = red.lrange('link:' + url, 0, list_length)
-            full_p = red.lrange('pic:' + url, 0, list_length)
+            # Convert to json! :)
+            list_length = red.llen('link:' + url)
+            new_dict = {}
             print list_length
-            for i in range(0, list_length):
-                new_dict[full_l[i]] = full_p[i]
+            if list_length > 0:
+                full_l = red.lrange('link:' + url, 0, list_length)
+                full_p = red.lrange('pic:' + url, 0, list_length)
+                print list_length
+                for i in range(0, list_length):
+                    new_dict[full_l[i]] = full_p[i]
 
-        red.set('json:' + url, json.dumps(new_dict))
+            red.set('json:' + url, json.dumps(new_dict))
 
-        hashDict[url] = ts
+            hashDict[url] = ts
+        except Exception as inst:
+            print inst
 
 
 while True:
@@ -167,4 +168,4 @@ while True:
 
     print 'Parsovanje je gotovo'
 
-    time.sleep(400)
+    time.sleep(220)
