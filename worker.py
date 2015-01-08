@@ -157,6 +157,7 @@ def update_hashes(url):
                 new_dict[full_l[i]] = full_p[i]
 
         red.set('json:' + url, new_dict)
+        print new_dict
 
         hashDict[url] = ts
 
@@ -168,3 +169,4 @@ while True:
     print 'Parsovanje je gotovo'
 
     time.sleep(400)
+
