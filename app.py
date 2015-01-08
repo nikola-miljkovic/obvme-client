@@ -1,12 +1,6 @@
 from flask import Flask
-import requests
-import xml.etree.ElementTree as ET
 import json
-import re
-from email.utils import parsedate_tz
-
-from bs4 import BeautifulSoup
-
+import redis
 from datetime import timedelta
 from flask import make_response, request, current_app
 from functools import update_wrapper
@@ -53,14 +47,8 @@ def crossdomain(origin=None, methods=None, headers=None,
         return update_wrapper(wrapped_function, f)
     return decorator
 
-
-app = Flask(__name__)
-global req_c
-req_c = 0
-
-
 hashDict = {
-    'http://www.b92.net/info/rss/vesti.xml': 1, # 0
+    'http://www.b92.net/info/rss/vesti.xml': 1,  # 0
     'http://www.b92.net/info/rss/sport.xml': 1,
     'http://www.b92.net/info/rss/zivot.xml': 1,
     'http://www.b92.net/info/rss/tehnopolis.xml': 1,
@@ -70,7 +58,7 @@ hashDict = {
     'http://www.b92.net/info/rss/kultura.xml': 1,
     'http://www.b92.net/info/rss/putovanja.xml': 1,
     'http://www.b92.net/info/rss/zdravlje.xml': 1,
-    'http://www.rts.rs/page/stories/sr/rss.html': 1, #10
+    'http://www.rts.rs/page/stories/sr/rss.html': 1,  #10
     'http://www.rts.rs/page/stories/sr/rss/9/politika.html': 1,
     'http://www.rts.rs/page/stories/sr/rss/11/region.html': 1,
     'http://www.rts.rs/page/stories/sr/rss/10/svet.html': 1,
@@ -92,7 +80,6 @@ hashDict = {
     'http://www.rts.rs/page/sport/sr/rss/87/atletika.html': 1,
     'http://www.rts.rs/page/sport/sr/rss/133/auto-moto.html': 1,
     'http://www.rts.rs/page/sport/sr/rss/129/ostali+sportovi.html': 1,
-    'http://rs.n1info.com/rss/1/N1-info': 1,
     'http://rs.n1info.com/rss/2/N1-info': 1,
     'http://rs.n1info.com/rss/3/N1-info': 1,
     'http://rs.n1info.com/rss/4/N1-info': 1,
@@ -107,110 +94,21 @@ hashDict = {
     'http://rs.n1info.com/rss/14/N1-info': 1,
     'http://rs.n1info.com/rss/15/N1-info': 1,
     'http://rs.n1info.com/rss/16/N1-info': 1
-
 }
 
-req_c = 1
-big_count = 1
-pictureHashes = {}
-for url in hashDict:
-    pictureHashes[url] = {}
-
-loaded = False
-
-
-def get_picture(url):
-    req = requests.get(url)
-    if req is None:
-        return None
-
-    soup = BeautifulSoup(req.content)
-
-    if url[11:12] == 'b':
-        div = soup.find('div', {'class': 'article-text'})
-    elif url[7:8] == 'b':
-        div = soup.find('div', {'class': 'blog-text'})
-    elif url[11:12] == '1':
-        div = soup.find('article', {'class': None})
-    else:
-        div = None
-
-    if div is not None:
-        img = div.find('img')
-        return img['src'] if img else ''
-    else:
-        return None
-
-
-def parse_description(desc):
-    r = 'img\ssrc="(.*)"'
-    z = re.search(r, desc)
-    return z.group(1) if z.group(1) else ''
-
-
-def update_hashes(url):
-    if url not in hashDict:
-        print 'Bad request: ' + url
-        return
-
-    global req_c
-    global big_count
-
-    if loaded:
-        if req_c != 0:
-            req_c = 0 if req_c == 25 else req_c + 1
-            return
-        else:
-            req_c = 1
-
-
-    data = requests.get(url).content
-    parsed = ET.fromstring(data)
-
-    if parsed[0].find('lastBuildDate') is not None:
-            v = parsed[0].find('lastBuildDate')
-    else:
-        v = parsed[0].find('item')
-        v = v.find('pubDate')
-
-    ts = parsedate_tz(v.text)
-
-    if ts > hashDict[url]:
-        count = 0
-        print 'parsing ' + url
-        for item in parsed[0].findall('item'):
-            count += 1
-            if count == 30:
-                break
-            link = item.find('link').text
-            if link in pictureHashes[url]:
-                 break
-
-            if url[11:12] == 'r':
-                pictureHashes[url][link] = parse_description(item.find('description').text)
-            else:
-                pictureHashes[url][link] = get_picture(link)
-
-            #print pictureHashes[url][link]
-
-
-        print 'Finished ' + str(big_count) + ' / ' + str(len(hashDict.keys()))
-        big_count = big_count + 1
-        hashDict[url] = ts
-
-
-for url in hashDict:
-    update_hashes(url)
-
-loaded = True
-print 'Parsovanje je gotovo'
+app = Flask(__name__)
+red = redis.StrictRedis(host='localhost', port=6379, db=4)
 
 
 @app.route('/get-pics/<path:url>')
 @crossdomain(origin='*')
 def get_pictures_from_xml(url):
-    update_hashes(url)
-    return json.dumps(pictureHashes[url]) if url in pictureHashes else '{}'
+    if url not in hashDict:
+        print 'Bad request: ' + url
+        return '{}'
+
+    a = red.get('json:' + url)
+    return a if a else '{}'
 
 
 @app.route('/parse-pics/<path:url>')
