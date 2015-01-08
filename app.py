@@ -108,7 +108,7 @@ def get_pictures_from_xml(url):
         return '{}'
 
     a = red.get('json:' + url)
-    return json.dumps(a) if a else '{}'
+    return a if a else '{}'
 
 
 @app.route('/parse-pics/<path:url>')
