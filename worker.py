@@ -158,8 +158,8 @@ def update_hashes(url):
             red.set('json:' + url, json.dumps(new_dict))
 
             hashDict[url] = ts
-        except Exception as inst:
-            print inst
+    except Exception as inst:
+        print inst
 
 
 while True:
@@ -168,4 +168,4 @@ while True:
 
     print 'Parsovanje je gotovo'
 
-    time.sleep(220)
+    time.sleep(360)
