@@ -78,7 +78,7 @@ for url in hashDict:
 def get_picture(url):
     req = requests.get(url)
     if req is None:
-        return None
+        return ''
 
     soup = BeautifulSoup(req.content)
 
@@ -95,7 +95,7 @@ def get_picture(url):
         img = div.find('img')
         return img['src'] if img else ''
     else:
-        return None
+        return ''
 
 
 def parse_description(desc):
@@ -122,7 +122,7 @@ def update_hashes(url):
             print 'parsing ' + url
             for item in parsed[0].findall('item'):
                 count += 1
-                if count == 30:
+                if count == 31:
                     break
                 link = item.find('link').text
                 if link in pictureHashes[url]:
@@ -133,13 +133,14 @@ def update_hashes(url):
                 else:
                     pictureHashes[url][link] = get_picture(link)
 
-                if pictureHashes[url][link]:
+                if pictureHashes[url][link] != '':
                     red.lpush('link:' + url, link)
-                    red.ltrim('link:' + url, 0, 29)
                     red.lpush('pic:' + url, pictureHashes[url][link])
-                    red.ltrim('pic:' + url, 0, 29)
 
                 # print pictureHashes[url][link]
+
+            red.ltrim('link:' + url, 0, 29)
+            red.ltrim('pic:' + url, 0, 29)
 
             print 'Finished ' + str(big_count) + ' / ' + str(len(hashDict.keys()))
             big_count = big_count + 1
