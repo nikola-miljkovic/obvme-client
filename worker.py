@@ -146,12 +146,11 @@ def update_hashes(url):
             big_count = big_count + 1
 
             # Convert to json! :)
-            list_length = red.llen('link:' + url)
+            full_l = red.lrange('link:' + url, 0, -1)
+            full_p = red.lrange('pic:' + url, 0, -1)
+            list_length = len(full_p)
             new_dict = {}
-            print list_length
             if list_length > 0:
-                full_l = red.lrange('link:' + url, 0, list_length)
-                full_p = red.lrange('pic:' + url, 0, list_length)
                 print list_length
                 for i in range(0, list_length):
                     new_dict[full_l[i]] = full_p[i]

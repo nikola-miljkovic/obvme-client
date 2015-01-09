@@ -103,6 +103,7 @@ red = redis.StrictRedis(host='localhost', port=6379, db=4)
 @app.route('/get-pics/<path:url>')
 @crossdomain(origin='*')
 def get_pictures_from_xml(url):
+    print url
     if url not in hashDict:
         print 'Bad request: ' + url
         return '{}'
