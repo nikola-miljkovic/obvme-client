@@ -70,10 +70,6 @@ big_count = 1
 
 red.flushdb()
 
-pictureHashes = {}
-for url in hashDict:
-    pictureHashes[url] = {}
-
 
 def get_picture(url):
     req = requests.get(url)
@@ -124,23 +120,23 @@ def update_hashes(url):
                 count += 1
                 if count == 31:
                     break
+                hashes = red.lrange('link:' + url, 0, -1)
                 link = item.find('link').text
-                if link in pictureHashes[url]:
+                if link in hashes:
                     break
 
                 if url[11:12] == 'r':
-                    pictureHashes[url][link] = parse_description(item.find('description').text)
+                    parsedval = parse_description(item.find('description').text)
                 else:
-                    pictureHashes[url][link] = get_picture(link)
+                    parsedval = get_picture(link)
 
-                if pictureHashes[url][link] != '':
+                if parsedval != '':
                     red.lpush('link:' + url, link)
-                    red.lpush('pic:' + url, pictureHashes[url][link])
+                    red.lpush('pic:' + url, parsedval)
 
-                # print pictureHashes[url][link]
 
-            red.ltrim('link:' + url, 0, 29)
-            red.ltrim('pic:' + url, 0, 29)
+            #red.ltrim('link:' + url, 0, 29)
+            #red.ltrim('pic:' + url, 0, 29)
 
             print 'Finished ' + str(big_count) + ' / ' + str(len(hashDict.keys()))
             big_count = big_count + 1

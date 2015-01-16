@@ -97,7 +97,7 @@ hashDict = {
 }
 
 app = Flask(__name__)
-red = redis.StrictRedis(host='localhost', port=6379, db=4)
+
 
 
 @app.route('/get-pics/<path:url>')
@@ -108,6 +108,7 @@ def get_pictures_from_xml(url):
         print 'Bad request: ' + url
         return '{}'
 
+    red = redis.StrictRedis(host='localhost', port=6379, db=4)
     a = red.get('json:' + url)
     return a if a else '{}'
 
