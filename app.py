@@ -6,6 +6,8 @@ from flask import make_response, request, current_app
 from functools import update_wrapper
 
 
+red = redis.StrictRedis(host='localhost', port=6379)
+
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
                 automatic_options=True):
@@ -99,7 +101,6 @@ hashDict = {
 app = Flask(__name__)
 
 
-
 @app.route('/get-pics/<path:url>')
 @crossdomain(origin='*')
 def get_pictures_from_xml(url):
@@ -108,15 +109,9 @@ def get_pictures_from_xml(url):
         print 'Bad request: ' + url
         return '{}'
 
-    red = redis.StrictRedis(host='localhost', port=6379, db=4)
     a = red.get('json:' + url)
     return a if a else '{}'
 
 
-@app.route('/parse-pics/<path:url>')
-def get_pictures_from_feed(url):
-    return url
-
 if __name__ == '__main__':
-
     app.run()

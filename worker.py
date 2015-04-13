@@ -9,12 +9,7 @@ from email.utils import parsedate_tz
 
 from bs4 import BeautifulSoup
 
-
-red = redis.StrictRedis(host='localhost', port=6379, db=4)
-
-global req_c
-big_count = 0
-req_c = 0
+red = redis.StrictRedis(host='localhost', port=6379)
 
 hashDict = {
     'http://www.b92.net/info/rss/vesti.xml': 1,  # 0
@@ -27,7 +22,7 @@ hashDict = {
     'http://www.b92.net/info/rss/kultura.xml': 1,
     'http://www.b92.net/info/rss/putovanja.xml': 1,
     'http://www.b92.net/info/rss/zdravlje.xml': 1,
-    'http://www.rts.rs/page/stories/sr/rss.html': 1,  #10
+    'http://www.rts.rs/page/stories/sr/rss.html': 1,  # 10
     'http://www.rts.rs/page/stories/sr/rss/9/politika.html': 1,
     'http://www.rts.rs/page/stories/sr/rss/11/region.html': 1,
     'http://www.rts.rs/page/stories/sr/rss/10/svet.html': 1,
@@ -65,9 +60,6 @@ hashDict = {
     'http://rs.n1info.com/rss/16/N1-info': 1
 }
 
-req_c = 1
-big_count = 1
-
 red.flushdb()
 
 
@@ -100,11 +92,12 @@ def parse_description(desc):
     return z.group(1) if z.group(1) else ''
 
 
-def update_hashes(url):
-    global big_count
-    print 'cita: ' + url
+def update_hashes(url, cnt):
+    print 'Starting: ' + url
 
     try:
+        len_hash = str(len(hashDict.keys()))
+
         data = requests.get(url).content
         parsed = ET.fromstring(data)
 
@@ -115,7 +108,8 @@ def update_hashes(url):
 
         if ts > hashDict[url]:
             count = 0
-            print 'parsing ' + url
+            print 'Parsing: ' + url
+
             for item in parsed[0].findall('item'):
                 count += 1
                 if count == 31:
@@ -126,20 +120,19 @@ def update_hashes(url):
                     break
 
                 if url[11:12] == 'r':
-                    parsedval = parse_description(item.find('description').text)
+                    parsed_val = parse_description(item.find('description').text)
                 else:
-                    parsedval = get_picture(link)
+                    parsed_val = get_picture(link)
 
-                if parsedval != '':
+                if parsed_val != '':
                     red.lpush('link:' + url, link)
-                    red.lpush('pic:' + url, parsedval)
+                    red.lpush('pic:' + url, parsed_val)
 
+            # clear up queue
+            red.ltrim('link:' + url, 0, 29)
+            red.ltrim('pic:' + url, 0, 29)
 
-            #red.ltrim('link:' + url, 0, 29)
-            #red.ltrim('pic:' + url, 0, 29)
-
-            print 'Finished ' + str(big_count) + ' / ' + str(len(hashDict.keys()))
-            big_count = big_count + 1
+            print 'Finished ' + str(cnt) + ' / ' + len_hash
 
             # Convert to json! :)
             full_l = red.lrange('link:' + url, 0, -1)
@@ -151,7 +144,9 @@ def update_hashes(url):
                 for i in range(0, list_length):
                     new_dict[full_l[i]] = full_p[i]
 
-            red.set('json:' + url, json.dumps(new_dict))
+            current_key = 'json:' + url
+            json_dump = json.dumps(new_dict)
+            red.set(current_key, json_dump)
 
             hashDict[url] = ts
     except Exception as inst:
@@ -159,9 +154,10 @@ def update_hashes(url):
 
 
 while True:
+    cnt = 1
     for url in hashDict:
-        update_hashes(url)
+        update_hashes(url, cnt)
+        cnt += 1
 
     print 'Parsovanje je gotovo'
-
     time.sleep(360)
