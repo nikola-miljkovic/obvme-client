@@ -1,15 +1,14 @@
 import redis
-
 import requests
 import xml.etree.ElementTree as ET
 import time
 import json
 import re
-from email.utils import parsedate_tz
+import gc
 
+from email.utils import parsedate_tz
 from bs4 import BeautifulSoup
 
-red = redis.StrictRedis(host='localhost', port=6379)
 
 hashDict = {
     'http://www.b92.net/info/rss/vesti.xml': 1,  # 0
@@ -60,8 +59,6 @@ hashDict = {
     'http://rs.n1info.com/rss/16/N1-info': 1
 }
 
-red.flushdb()
-
 
 def get_picture(url):
     req = requests.get(url)
@@ -92,11 +89,12 @@ def parse_description(desc):
     return z.group(1) if z.group(1) else ''
 
 
-def update_hashes(url, cnt):
+def update_hashes(url, cnt, redis):
     print 'Starting: ' + url
 
     try:
-        len_hash = str(len(hashDict.keys()))
+        # find number of
+        parse_dict_len_str = str(len(hashDict.keys()))
 
         data = requests.get(url).content
         parsed = ET.fromstring(data)
@@ -112,31 +110,35 @@ def update_hashes(url, cnt):
 
             for item in parsed[0].findall('item'):
                 count += 1
+
                 if count == 31:
                     break
-                hashes = red.lrange('link:' + url, 0, -1)
+
+                hashes = redis.lrange('link:' + url, 0, -1)
                 link = item.find('link').text
+
                 if link in hashes:
                     break
 
                 if url[11:12] == 'r':
-                    parsed_val = parse_description(item.find('description').text)
+                    parsed_val = parse_description(
+                        item.find('description').text)
                 else:
                     parsed_val = get_picture(link)
 
                 if parsed_val != '':
-                    red.lpush('link:' + url, link)
-                    red.lpush('pic:' + url, parsed_val)
+                    redis.lpush('link:' + url, link)
+                    redis.lpush('pic:' + url, parsed_val)
 
-            # clear up queue
-            red.ltrim('link:' + url, 0, 29)
-            red.ltrim('pic:' + url, 0, 29)
+            # trime queue
+            redis.ltrim('link:' + url, 0, 29)
+            redis.ltrim('pic:' + url, 0, 29)
 
-            print 'Finished ' + str(cnt) + ' / ' + len_hash
+            print 'Finished ' + str(cnt) + ' / ' + parse_dict_len_str
 
             # Convert to json! :)
-            full_l = red.lrange('link:' + url, 0, -1)
-            full_p = red.lrange('pic:' + url, 0, -1)
+            full_l = redis.lrange('link:' + url, 0, -1)
+            full_p = redis.lrange('pic:' + url, 0, -1)
             list_length = len(full_p)
             new_dict = {}
             if list_length > 0:
@@ -146,18 +148,28 @@ def update_hashes(url, cnt):
 
             current_key = 'json:' + url
             json_dump = json.dumps(new_dict)
-            red.set(current_key, json_dump)
+            redis.set(current_key, json_dump)
 
             hashDict[url] = ts
+
     except Exception as inst:
         print inst
 
 
-while True:
-    cnt = 1
-    for url in hashDict:
-        update_hashes(url, cnt)
-        cnt += 1
+if __name__ == '__main__':
+    redis = redis.StrictRedis(host='localhost', port=6380)
+    redis.flushdb()
 
-    print 'Parsovanje je gotovo'
-    time.sleep(360)
+    timeout_value = 360
+
+    while True:
+        parsed_count = 1
+        for url in hashDict:
+            update_hashes(url, parsed_count, redis)
+            parsed_count += 1
+
+        print 'Parsing finished, cleaning...'
+        gc.collect()
+
+        print 'Pausing for ' + str(timeout_value/60) + ' minutes'
+        time.sleep(timeout_value)
